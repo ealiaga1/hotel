@@ -34,19 +34,26 @@ class Guest {
      * @return array
      */
     public function searchGuests($query) {
-        $query_param = '%' . $query . '%';
+        error_log("DEBUG-GUEST-MODEL: searchGuests called with query: " . $query);
+        $query = '%' . $query . '%';
         $sql = "SELECT id_huesped, nombre, apellido, tipo_documento, numero_documento, email, telefono
                 FROM huespedes
                 WHERE nombre LIKE ? OR apellido LIKE ? OR email LIKE ? OR numero_documento LIKE ?
                 ORDER BY apellido, nombre
                 LIMIT 10";
         $stmt = $this->pdo->prepare($sql);
+        
         try {
-            $stmt->execute([$query_param, $query_param, $query_param, $query_param]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt->execute([$query, $query, $query, $query]);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            error_log("DEBUG-GUEST-MODEL: SQL executed: " . $sql);
+            error_log("DEBUG-GUEST-MODEL: SQL params: " . print_r([$query, $query, $query, $query], true));
+            error_log("DEBUG-GUEST-MODEL: Search results count: " . count($results));
+            error_log("DEBUG-GUEST-MODEL: Search results: " . print_r($results, true));
+            return $results;
         } catch (PDOException $e) {
             error_log("DEBUG-GUEST-MODEL ERROR: PDOException in searchGuests: " . $e->getMessage() . " | SQL: " . $sql);
-            return [];
+            return []; // Return empty array on error
         }
     }
 
@@ -117,13 +124,12 @@ class Guest {
      * @return int|false The ID of the new charge or false on failure.
      */
     public function addGuestCharge($data) {
-        $sql = "INSERT INTO cargos_huesped (id_huesped, id_reserva, id_pedido_restaurante, descripcion, monto, fecha_cargo, estado, id_usuario_registro)
+        $sql = "INSERT INTO cargos_huesped (id_huesped, id_reserva, descripcion, monto, fecha_cargo, estado, id_usuario_registro)
                 VALUES (?, ?, ?, ?, NOW(), ?, ?)";
         $stmt = $this->pdo->prepare($sql);
         $result = $stmt->execute([
             $data['id_huesped'],
             $data['id_reserva'] ?? null,
-            $data['id_pedido_restaurante'] ?? null,
             $data['descripcion'],
             $data['monto'],
             $data['estado'] ?? 'pendiente',
@@ -133,24 +139,19 @@ class Guest {
     }
 
     /**
-     * Gets all pending (unpaid) charges for a specific guest, optionally linked to a booking or restaurant order.
+     * Gets all pending (unpaid) charges for a specific guest, optionally linked to a booking.
      * @param int $id_huesped
      * @param int|null $id_reserva Optional booking ID to *filter* charges. If null, gets all for guest.
-     * @param int|null $id_pedido_restaurante Optional restaurant order ID to *filter* charges.
      * @return array
      */
-    public function getPendingChargesForGuest($id_huesped, $id_reserva = null, $id_pedido_restaurante = null) {
-        $sql = "SELECT id_cargo, descripcion, monto, fecha_cargo, estado FROM cargos_huesped
+    public function getPendingChargesForGuest($id_huesped, $id_reserva = null) {
+        $sql = "SELECT id_cargo, descripcion, monto, fecha_cargo FROM cargos_huesped
                 WHERE id_huesped = ? AND estado = 'pendiente'";
         $params = [$id_huesped];
 
-        if ($id_reserva !== null) {
+        if ($id_reserva !== null) { // Si id_reserva es null, este filtro NO se aplica, y se traen todos los pendientes para el huésped.
             $sql .= " AND id_reserva = ?";
             $params[] = $id_reserva;
-        }
-        if ($id_pedido_restaurante !== null) {
-            $sql .= " AND id_pedido_restaurante = ?";
-            $params[] = $id_pedido_restaurante;
         }
 
         $stmt = $this->pdo->prepare($sql);
@@ -165,7 +166,7 @@ class Guest {
      * @return bool
      */
     public function updateGuestChargesStatus($charge_ids, $new_status) {
-        if (empty($charge_ids)) return true;
+        if (empty($charge_ids)) return true; // Nothing to update
         $placeholders = implode(',', array_fill(0, count($charge_ids), '?'));
         $sql = "UPDATE cargos_huesped SET estado = ? WHERE id_cargo IN (" . $placeholders . ")";
         $params = array_merge([$new_status], $charge_ids);
@@ -173,22 +174,14 @@ class Guest {
         return $stmt->execute($params);
     }
 
-    /**
-     * Updates the amount of a specific guest charge.
-     * @param int $id_cargo The ID of the charge to update.
-     * @param float $new_amount The new amount for the charge.
-     * @return bool True on success, false on failure.
-     */
-    public function updateGuestChargesAmount($id_cargo, $new_amount) {
+public function updateGuestChargesAmount($id_cargo, $new_amount) {
         $sql = "UPDATE cargos_huesped SET monto = ? WHERE id_cargo = ?";
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([$new_amount, $id_cargo]);
     }
+    
 
-    /**
-     * Gets the total count of all guests.
-     * @return int
-     */
+    // --- NUEVO MÉTODO PARA EL DASHBOARD ---
     public function getTotalGuestsCount() {
         $stmt = $this->pdo->query("SELECT COUNT(*) FROM huespedes");
         return $stmt->fetchColumn();

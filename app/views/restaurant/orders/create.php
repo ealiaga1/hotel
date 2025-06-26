@@ -119,6 +119,38 @@
                 <input type="hidden" name="order_items_json" id="orderItemsJson">
             </fieldset>
 
+            <!-- Sección de Pago -->
+            <fieldset class="mb-4 p-3 border rounded">
+                <legend class="float-none w-auto px-2 fs-5">Pago del Pedido</legend>
+                <div class="mb-3">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="payment_type" id="paymentTypeImmediate" value="immediate" checked>
+                        <label class="form-check-label" for="paymentTypeImmediate">Pago inmediato</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="payment_type" id="paymentTypeChargeToRoom" value="charge_to_room">
+                        <label class="form-check-label" for="paymentTypeChargeToRoom">Cargar a Habitación</label>
+                    </div>
+                </div>
+                <div id="immediatePaymentFields">
+                    <div class="mb-3">
+                        <label for="payment_method" class="form-label">Método de Pago <span class="text-danger">*</span></label>
+                        <select class="form-select" id="payment_method" name="payment_method">
+                            <option value="">Seleccione un método</option>
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Tarjeta de Crédito">Tarjeta de Crédito</option>
+                            <option value="Yape/Plin">Yape/Plin</option>
+                            <option value="Transferencia Bancaria">Transferencia Bancaria</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="chargeToRoomFields" style="display:none;">
+                    <div class="alert alert-info">
+                        El pedido se cargará como pendiente en la cuenta del huésped y se pagará en el checkout.
+                    </div>
+                </div>
+            </fieldset>
+
             <div class="d-flex justify-content-end">
                 <a href="/hotel_completo/public/restaurant/orders" class="btn btn-secondary me-2">Cancelar</a>
                 <button type="submit" class="btn btn-primary">Guardar Pedido</button>
@@ -155,6 +187,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const orderItemsTableBody = document.getElementById('orderItemsTableBody');
     const orderTotalDisplay = document.getElementById('orderTotal');
     const orderItemsJsonInput = document.getElementById('orderItemsJson');
+
+    // --- Elementos de pago ---
+    const paymentTypeImmediate = document.getElementById('paymentTypeImmediate');
+    const paymentTypeChargeToRoom = document.getElementById('paymentTypeChargeToRoom');
+    const immediatePaymentFields = document.getElementById('immediatePaymentFields');
+    const chargeToRoomFields = document.getElementById('chargeToRoomFields');
+    const paymentMethodSelect = document.getElementById('payment_method');
 
     let orderItems = []; // Array para almacenar los ítems del pedido
 
@@ -334,19 +373,46 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 300);
     });
 
+    // --- Lógica de Pago: Inmediato vs. Cargar a Habitación ---
+    function togglePaymentFields() {
+        if (paymentTypeImmediate.checked) {
+            immediatePaymentFields.style.display = 'block';
+            chargeToRoomFields.style.display = 'none';
+            paymentMethodSelect.required = true;
+        } else {
+            immediatePaymentFields.style.display = 'none';
+            chargeToRoomFields.style.display = 'block';
+            paymentMethodSelect.required = false;
+            paymentMethodSelect.value = '';
+            // Si el tipo de pedido no es habitación, forzarlo (opcional pero recomendable)
+            if (!tipoPedidoHabitacion.checked) {
+                tipoPedidoHabitacion.checked = true;
+                togglePedidoTypeFields();
+            }
+        }
+    }
+    paymentTypeImmediate.addEventListener('change', togglePaymentFields);
+    paymentTypeChargeToRoom.addEventListener('change', togglePaymentFields);
+    togglePaymentFields(); // Inicial
+
+    tipoPedidoMesa.addEventListener('change', function() {
+        if (paymentTypeChargeToRoom.checked) paymentTypeImmediate.checked = true;
+        togglePaymentFields();
+    });
+    tipoPedidoExterno.addEventListener('change', function() {
+        if (paymentTypeChargeToRoom.checked) paymentTypeImmediate.checked = true;
+        togglePaymentFields();
+    });
+
     // --- Inicialización al cargar la página ---
-    // Pre-seleccionar la mesa si viene en la URL
     if (preselectedTableId) {
         idMesaSelect.value = preselectedTableId;
         tipoPedidoMesa.checked = true;
     }
-    // Si es "Añadir a Pedido"
     if ('<?php echo htmlspecialchars($preselected_order_id ?? ''); ?>' !== '') {
-        // Asegurarse de que el tipo de pedido sea el de la orden existente
         const orderType = '<?php echo htmlspecialchars($preselected_client_type ?? ''); ?>';
         if (orderType === 'habitacion') {
             tipoPedidoHabitacion.checked = true;
-            // Si el pedido existente es de habitación, cargar el huésped
             const preloadedGuestId = '<?php echo htmlspecialchars($preselected_order['id_huesped'] ?? ''); ?>';
             const preloadedGuestName = '<?php echo htmlspecialchars(($preselected_order['huesped_nombre'] ?? '') . ' ' . ($preselected_order['huesped_apellido'] ?? '')); ?>';
             if (preloadedGuestId) {
@@ -355,19 +421,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } else if (orderType === 'externo') {
             tipoPedidoExterno.checked = true;
-            // Cargar el nombre y teléfono del cliente externo si es el caso
             document.getElementById('nombre_cliente_externo').value = '<?php echo htmlspecialchars($preselected_order['cliente_externo_nombre'] ?? ''); ?>';
             document.getElementById('telefono_cliente_externo').value = '<?php echo htmlspecialchars($preselected_order['cliente_externo_telefono'] ?? ''); ?>';
-        } else { // Asumir mesa si no es habitación ni externo
+        } else {
             tipoPedidoMesa.checked = true;
         }
-        // Deshabilitar los radios de tipo de pedido si estamos añadiendo a un pedido existente
         tipoPedidoMesa.disabled = true;
         tipoPedidoHabitacion.disabled = true;
         tipoPedidoExterno.disabled = true;
     }
 
-    togglePedidoTypeFields(); // Llamada inicial para configurar la visibilidad y requeridos
-    renderOrderItemsTable(); // Renderizar ítems pre-cargados al inicio
+    togglePedidoTypeFields();
+    renderOrderItemsTable();
 });
 </script>

@@ -14,89 +14,92 @@
     <a href="/hotel_completo/public/restaurant/tables/create" class="btn btn-primary"><i class="fas fa-plus"></i> Añadir Nueva Mesa</a>
 </div>
 
-<div class="row">
-    <?php if (!empty($tables)): ?>
-        <?php foreach ($tables as $table): ?>
-            <?php
-            $cardClass = 'bg-light'; // Default
-            $textColor = 'text-white'; // Default to white for colored cards
-            $statusText = '';
-            $statusIconClass = '';
-            $orderInfo = '';
-            $orderId = ''; // Para pasar el ID de la orden si existe
+<style>
+.mesas-flex {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 22px;
+}
+.mesa-circulo {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin: 0 0 15px 0;
+    box-shadow: 0 0 8px rgba(0,0,0,0.08);
+    transition: box-shadow 0.2s, transform 0.2s;
+    border: 3px solid #eee;
+    cursor: pointer;
+    background: #f8f9fa;
+    position: relative;
+    min-width: 110px;
+}
+.mesa-circulo:hover {
+    box-shadow: 0 0 20px 2px #007bff55;
+    transform: scale(1.08);
+}
+.mesa-circulo.disponible { border-color: #28a745; background: #eafaea; }
+.mesa-circulo.ocupada { border-color: #dc3545; background: #ffeaea; }
+.mesa-circulo.reservada { border-color: #ffc107; background: #fff8e1; }
+.mesa-circulo.en_limpieza { border-color: #17a2b8; background: #e1f7fa; }
+.mesa-numero {
+    font-size: 2.1rem;
+    font-weight: bold;
+}
+.mesa-estado {
+    font-size: 0.93rem;
+    margin-top: 6px;
+    text-transform: capitalize;
+}
+.mesa-info-pedido {
+    font-size: 0.85rem;
+    color: #333;
+    text-align: center;
+    margin-top: 7px;
+}
+</style>
 
-            switch ($table['estado']) {
-                case 'disponible':
-                    $cardClass = 'bg-success';
-                    $statusText = 'Disponible';
-                    $statusIconClass = 'fas fa-chair'; // Icono para mesa disponible
-                    $textColor = 'text-white';
-                    break;
-                case 'ocupada':
-                    $cardClass = 'bg-danger';
-                    $statusText = 'Ocupada';
-                    $statusIconClass = 'fas fa-users'; // Icono para mesa ocupada
-                    $textColor = 'text-white';
-                    if ($table['active_order']) {
-                        $orderInfo = 'Pedido: #' . htmlspecialchars($table['active_order']['id_pedido']);
-                        if (!empty($table['cliente_info'])) {
-                            $orderInfo .= '<br>Cliente: ' . htmlspecialchars($table['cliente_info']);
-                        }
-                        $orderInfo .= '<br>Total: S/ ' . number_format(htmlspecialchars($table['active_order']['total_pedido']), 2, '.', ',');
-                        $orderId = htmlspecialchars($table['active_order']['id_pedido']);
+<?php if (!empty($tables)): ?>
+    <div class="mesas-flex">
+        <?php foreach ($tables as $mesa): ?>
+            <?php
+                $clase_estado = htmlspecialchars($mesa['estado']);
+                $info_pedido = '';
+                // Si la mesa está ocupada y tiene pedido activo, mostrar info
+                if ($mesa['estado'] === 'ocupada' && !empty($mesa['active_order'])) {
+                    $info_pedido = 'Pedido: #' . htmlspecialchars($mesa['active_order']['id_pedido']);
+                    if (!empty($mesa['cliente_info'])) {
+                        $info_pedido .= '<br>Cliente: ' . htmlspecialchars($mesa['cliente_info']);
                     }
-                    break;
-                case 'en_limpieza':
-                    $cardClass = 'bg-warning text-dark'; // Texto oscuro para fondo claro
-                    $statusText = 'En Limpieza';
-                    $statusIconClass = 'fas fa-broom'; // Icono para limpieza
-                    $textColor = 'text-dark';
-                    break;
-                case 'reservada': // Si tienes este estado
-                    $cardClass = 'bg-info';
-                    $statusText = 'Reservada';
-                    $statusIconClass = 'fas fa-bookmark';
-                    $textColor = 'text-white';
-                    break;
-                default:
-                    $cardClass = 'bg-secondary';
-                    $statusText = ucfirst($table['estado']);
-                    $statusIconClass = 'fas fa-question';
-                    $textColor = 'text-white';
-                    break;
-            }
+                    $info_pedido .= '<br>Total: S/ ' . number_format($mesa['active_order']['total_pedido'], 2, '.', ',');
+                }
             ?>
-            <div class="col-sm-6 col-md-4 col-lg-3 mb-4">
-                <div class="card <?php echo $cardClass; ?> shadow h-100 table-card" style="cursor: pointer;" 
-                     data-table-id="<?php echo htmlspecialchars($table['id_mesa']); ?>"
-                     data-table-number="<?php echo htmlspecialchars($table['numero_mesa']); ?>"
-                     data-table-status="<?php echo htmlspecialchars($table['estado']); ?>"
-                     data-order-id="<?php echo $orderId; ?>">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="card-title mb-0 <?php echo $textColor; ?>">Mesa <?php echo htmlspecialchars($table['numero_mesa']); ?></h5>
-                            <i class="<?php echo $statusIconClass; ?> fa-2x <?php echo $textColor; ?>"></i> <!-- Icono de estado -->
-                        </div>
-                        <p class="card-text <?php echo $textColor; ?>"><small>Capacidad: <?php echo htmlspecialchars($table['capacidad']); ?></small></p>
-                        <hr class="my-2 border-white opacity-50">
-                        <p class="card-text <?php echo $textColor; ?>"><strong>Estado:</strong> <?php echo $statusText; ?></p>
-                        <?php if ($orderInfo): ?>
-                            <p class="card-text <?php echo $textColor; ?>"><small><?php echo $orderInfo; ?></small></p>
-                        <?php endif; ?>
-                    </div>
-                </div>
+            <div class="mesa-circulo <?= $clase_estado ?>"
+                 title="Mesa #<?= htmlspecialchars($mesa['numero_mesa']) ?>"
+                 data-table-id="<?= htmlspecialchars($mesa['id_mesa']) ?>"
+                 data-table-number="<?= htmlspecialchars($mesa['numero_mesa']) ?>"
+                 data-table-status="<?= htmlspecialchars($mesa['estado']) ?>"
+                 data-order-id="<?= !empty($mesa['active_order']) ? htmlspecialchars($mesa['active_order']['id_pedido']) : '' ?>">
+                <div class="mesa-numero"><?= htmlspecialchars($mesa['numero_mesa']) ?></div>
+                <div class="mesa-estado"><?= ucfirst(str_replace('_', ' ', $mesa['estado'])) ?></div>
+                <?php if ($info_pedido): ?>
+                    <div class="mesa-info-pedido"><?= $info_pedido ?></div>
+                <?php endif; ?>
             </div>
         <?php endforeach; ?>
-    <?php else: ?>
-        <div class="col-12">
-            <div class="alert alert-info text-center" role="alert">
-                No hay mesas registradas en el sistema.
-            </div>
-        </div>
-    <?php endif; ?>
-</div>
+    </div>
+<?php else: ?>
+    <div class="alert alert-info text-center" role="alert">
+        No hay mesas registradas en el sistema.
+    </div>
+<?php endif; ?>
 
-<!-- Modal para acciones de mesa -->
+<!-- Modal y JS (igual que antes, solo adaptando selectores si es necesario) -->
 <div class="modal fade" id="tableActionModal" tabindex="-1" aria-labelledby="tableActionModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -122,7 +125,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const tableCards = document.querySelectorAll('.table-card');
+    const tableCards = document.querySelectorAll('.mesa-circulo');
     const tableActionModal = new bootstrap.Modal(document.getElementById('tableActionModal'));
     
     const modalTableNumber = document.getElementById('modalTableNumber');
@@ -136,22 +139,21 @@ document.addEventListener('DOMContentLoaded', function() {
             const tableId = this.dataset.tableId;
             const tableNumber = this.dataset.tableNumber;
             const tableStatus = this.dataset.tableStatus;
-            const orderId = this.dataset.orderId; // ID de la orden activa, si existe
-            const orderInfoHtml = this.querySelector('.card-text:last-of-type small') ? this.querySelector('.card-text:last-of-type small').innerHTML : 'N/A';
+            const orderId = this.dataset.orderId;
+            const orderInfoHtml = this.querySelector('.mesa-info-pedido') ? this.querySelector('.mesa-info-pedido').innerHTML : 'N/A';
 
             modalTableNumber.textContent = tableNumber;
             modalTableId.textContent = tableId;
             modalTableStatus.textContent = tableStatus.charAt(0).toUpperCase() + tableStatus.slice(1).replace('_', ' ');
             modalOrderInfo.innerHTML = (tableStatus === 'ocupada' && orderId) ? orderInfoHtml : 'N/A';
 
-            modalActions.innerHTML = ''; // Limpiar acciones previas
+            modalActions.innerHTML = '';
 
-            const baseUrl = '<?php echo $base_url_for_assets; ?>';
+            const baseUrl = '<?php echo $base_url_for_assets ?? "/hotel_completo/public/"; ?>';
 
-            // Siempre incluir el botón de Editar Mesa
+            // Editar Mesa
             modalActions.innerHTML += `<a href="${baseUrl}restaurant/tables/edit/${tableId}" class="btn btn-info me-2"><i class="fas fa-edit"></i> Editar Mesa</a>`;
 
-            // Acciones específicas por estado de mesa
             switch (tableStatus) {
                 case 'disponible':
                     modalActions.innerHTML += `
@@ -171,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <button type="button" class="btn btn-success me-2" onclick="sendTableStatusUpdate(${tableId}, 'disponible', '${tableNumber}')"><i class="fas fa-check"></i> Marcar Disponible</button>
                     `;
                     break;
-                case 'reservada': // Si usas este estado, puedes añadir acciones aquí
+                case 'reservada':
                     modalActions.innerHTML += `
                         <button type="button" class="btn btn-success me-2" onclick="sendTableStatusUpdate(${tableId}, 'ocupada', '${tableNumber}')"><i class="fas fa-user-check"></i> Marcar Ocupada</button>
                         <button type="button" class="btn btn-secondary" onclick="sendTableStatusUpdate(${tableId}, 'disponible', '${tableNumber}')"><i class="fas fa-undo"></i> Cancelar Reserva</button>
@@ -183,13 +185,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Función global para enviar el formulario POST para actualizar el estado de la mesa
     window.sendTableStatusUpdate = function(tableId, newStatus, tableNumber) {
         if (confirm(`¿Estás seguro de cambiar el estado de la mesa ${tableNumber} a "${newStatus.charAt(0).toUpperCase() + newStatus.slice(1).replace('_', ' ')}"?`)) {
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = `${baseUrl}restaurant/tables/update_status/${tableId}/${newStatus}`;
-            
+            form.action = '<?php echo $base_url_for_assets ?? "/hotel_completo/public/"; ?>restaurant/tables/update_status/' + tableId + '/' + newStatus;
             document.body.appendChild(form);
             form.submit();
         }

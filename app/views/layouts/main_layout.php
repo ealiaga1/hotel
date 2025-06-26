@@ -51,13 +51,13 @@ try {
         #sidebar-wrapper {
             min-width: 250px;
             max-width: 250px;
-            background-color: #343a40;
-            color: #f8f9fa;
+            background-color: linear-gradient(160deg, #23395d 0%, #1565c0 90%);
+            color: #f8f9fa;;
             transition: all 0.3s;
             display: flex;
             flex-direction: column;
             padding-top: 20px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            box-shadow: 2px 0 6px rgba(35,57,93,0.13);
         }
         #sidebar-wrapper .sidebar-heading {
             padding: 0.875rem 1.25rem;
@@ -65,9 +65,10 @@ try {
             font-weight: bold;
             text-align: center;
             color: #ffffff;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.12);
             margin-bottom: 15px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            text-shadow: 1px 1px 8px #1565c0;
+            letter-spacing: 2px;
         }
         #sidebar-wrapper .list-group {
             width: 100%;
@@ -75,16 +76,17 @@ try {
         /* Estilos para los items principales del menú (padres de submenús) */
         #sidebar-wrapper .list-group-item {
             background-color: transparent;
-            color: #adb5bd;
+            color: #b3c3e6;
             border: none;
             padding: 12px 1.25rem;
             display: flex;
             align-items: center;
             border-radius: 0;
-            font-size: 0.95rem;
-            width: 100%; /* Asegura que el botón ocupe todo el ancho para el click */
-            text-align: left; /* Alinea el texto a la izquierda */
-            cursor: pointer; /* Indica que es clicable */
+            font-size: 0.97rem;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, border-left 0.2s;
         }
         #sidebar-wrapper .list-group-item i {
             margin-right: 12px;
@@ -94,27 +96,30 @@ try {
         }
         #sidebar-wrapper .list-group-item:hover,
         #sidebar-wrapper .list-group-item.active {
-            background-color: #495057;
-            color: #ffffff;
+            background: linear-gradient(90deg, #1976d2 0%, #64b5f6 100%);
+            color: #fff;
             text-decoration: none;
-            border-left: 4px solid #007bff;
+            border-left: 4px solid #29b6f6;
             padding-left: calc(1.25rem - 4px);
         }
         /* Estilos para los submenús */
         .sidebar-submenu {
-            background-color: #2c3136; /* Slightly lighter than main sidebar */
-            padding-left: 20px; /* Indent sub-items */
-            border-left: 4px solid #495057; /* Visual separation */
+            background-color: #23395d;
+            padding-left: 20px;
+            border-left: 4px solid #1976d2;
             margin-left: 10px;
         }
         .sidebar-submenu .list-group-item {
             padding-top: 8px;
             padding-bottom: 8px;
-            font-size: 0.9rem;
+            font-size: 0.92rem;
+            color: #b3c3e6;
         }
         .sidebar-submenu .list-group-item:hover,
         .sidebar-submenu .list-group-item.active {
-            border-left: 4px solid #007bff; /* Keep active border */
+            border-left: 4px solid #29b6f6;
+            background: #1976d2;
+            color: #fff;
         }
         /* Ajuste para el icono de flecha del desplegable */
         .dropdown-toggle-sidebar::after {
@@ -147,15 +152,15 @@ try {
         }
         .user-info {
             font-weight: bold;
-            color: #343a40;
+            color: #23395d;
             font-size: 1.05rem;
         }
         .dropdown-menu {
             border-radius: 0.25rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            font-size: 0.95rem;
+            box-shadow: 0 4px 10px rgba(33,150,243,0.09);
+            font-size: 0.97rem;;
         }
-        .text-primary-light { color: #66b3ff !important; }
+        .text-primary-light { color: #64b5f6 !important; }
         .text-warning-light { color: #ffe08a !important; }
         .text-success-light { color: #87e087 !important; }
         .text-info-light { color: #8ad8ff !important; }
