@@ -81,19 +81,8 @@ class RoomController {
      */
     public function edit($id_habitacion) {
         $title = "Editar Habitación";
-        // Eliminamos las líneas de depuración temporalmente añadidas
-        // ini_set('display_errors', 1);
-        // error_reporting(E_ALL);
-        // echo "DEBUGGING RoomController::edit() <br>";
-        // echo "Attempting to retrieve Room with ID: " . htmlspecialchars($id_habitacion) . "<br>";
 
         $room = $this->roomModel->getRoomById($id_habitacion);
-        
-        // Eliminamos las líneas de depuración temporalmente añadidas
-        // echo "Result of getRoomById for ID " . htmlspecialchars($id_habitacion) . ": <br><pre>";
-        // var_dump($room);
-        // echo "</pre><br>";
-
         $roomTypes = $this->roomTypeModel->getAll();
 
         $error_message = '';
@@ -119,7 +108,8 @@ class RoomController {
                 try {
                     if ($this->roomModel->update($id_habitacion, $data)) {
                         $_SESSION['success_message'] = 'Habitación actualizada exitosamente.';
-                        $room = $this->roomModel->getRoomById($id_habitacion); // Reload room data to reflect changes
+                        header('Location: /hotel_completo/public/reception');
+                        exit();
                     } else {
                         $error_message = 'Error al actualizar la habitación.';
                     }
@@ -166,12 +156,7 @@ class RoomController {
      * @param string $new_status The new status for the room (e.g., 'disponible', 'sucia', 'mantenimiento').
      */
     public function updateStatus($id_habitacion, $new_status) {
-        // Eliminamos las líneas de depuración temporalmente añadidas
         ini_set('display_errors', 0);
-        // error_reporting(E_ALL); // Mantener para el log del servidor
-        // error_log("DEBUG-ROOM-STATUS: updateStatus method called. Room ID: " . $id_habitacion . ", New Status: " . $new_status);
-        // error_log("DEBUG-ROOM-STATUS: Request Method: " . $_SERVER['REQUEST_METHOD']);
-        // error_log("DEBUG-ROOM-STATUS: POST data: " . print_r($_POST, true));
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $_SESSION['error_message'] = 'Acceso no permitido. La actualización de estado debe ser vía POST.';
@@ -183,7 +168,6 @@ class RoomController {
             $allowed_statuses = ['disponible', 'ocupada', 'sucia', 'mantenimiento'];
             if (!in_array($new_status, $allowed_statuses)) {
                 $_SESSION['error_message'] = 'Estado de habitación no válido: ' . htmlspecialchars($new_status);
-                // error_log("DEBUG-ROOM-STATUS: Invalid new status provided: " . $new_status);
                 header('Location: /hotel_completo/public/reception');
                 exit();
             }
@@ -191,28 +175,22 @@ class RoomController {
             $room = $this->roomModel->getRoomById($id_habitacion);
             if (!$room) {
                 $_SESSION['error_message'] = 'Habitación no encontrada.';
-                // error_log("DEBUG-ROOM-STATUS: Room not found for ID: " . $id_habitacion);
                 header('Location: /hotel_completo/public/reception');
                 exit();
             }
 
             if ($room['estado'] === 'ocupada' && !($new_status === 'sucia' || $new_status === 'mantenimiento')) {
                  $_SESSION['error_message'] = 'No se puede cambiar directamente una habitación ocupada a "' . ucfirst($new_status) . '". Debe pasar por el proceso de Checkout o poner en mantenimiento.';
-                 // error_log("DEBUG-ROOM-STATUS: Attempted to change occupied room to " . $new_status . " directly.");
                  header('Location: /hotel_completo/public/reception');
                  exit();
             }
 
-            // error_log("DEBUG-ROOM-STATUS: Attempting to update room status in model.");
             if ($this->roomModel->updateRoomStatus($id_habitacion, $new_status)) {
-                // error_log("DEBUG-ROOM-STATUS: Room status updated successfully.");
                 $_SESSION['success_message'] = 'Estado de la habitación ' . htmlspecialchars($room['numero_habitacion']) . ' actualizado a "' . ucfirst($new_status) . '" exitosamente.';
             } else {
-                // error_log("DEBUG-ROOM-STATUS: Failed to update room status in model.");
                 $_SESSION['error_message'] = 'Error al actualizar el estado de la habitación (updateRoomStatus regresó false).';
             }
         } catch (PDOException $e) {
-            // error_log("DEBUG-ROOM-STATUS ERROR: PDOException: " . $e->getMessage());
             $_SESSION['error_message'] = 'Error de base de datos al actualizar el estado de la habitación: ' . $e->getMessage();
         }
         header('Location: /hotel_completo/public/reception');
