@@ -66,7 +66,7 @@
 .room-card .card-title,
 .room-card .card-text,
 .room-card .card-text small {
-    color: #17325c !important;     /* Azul muy oscuro, legible */
+    color: #17325c !important;
     text-shadow: 0 1px 8px #fff8, 0 1px 1px #0002;
     font-weight: 600;
 }
@@ -109,6 +109,50 @@
     margin: 6px 0;
 }
 
+/* MODAL limpio y profesional */
+.clean-modal .modal-content {
+    border-radius: 22px;
+    box-shadow: 0 6px 32px #1976d266;
+    padding: 0 8px;
+}
+.clean-modal .modal-header {
+    background: linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%);
+    border-radius: 22px 22px 0 0;
+    box-shadow: 0 2px 12px #2196f312;
+}
+.clean-modal .modal-title {
+    font-size: 1.25rem;
+}
+#modalActions .btn {
+    min-width: 170px;
+    margin: 0;
+    padding: 0.7rem 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px #42a5f622;
+    transition: transform 0.09s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#modalActions .btn i {
+    margin-right: 7px;
+    font-size: 1.2em;
+}
+#modalActions .btn:hover {
+    transform: translateY(-2px) scale(1.035);
+}
+#modalActions .row {
+    --bs-gutter-x: 0.5rem;
+}
+@media (max-width: 575.98px) {
+    #modalActions .btn {
+        min-width: 100%;
+        font-size: 0.97rem;
+        margin-bottom: 4px;
+    }
+}
 </style>
 
 <div class="row">
@@ -184,26 +228,35 @@
     <?php endif; ?>
 </div>
 
-<!-- Modal para acciones de habitación -->
+<!-- MODAL para acciones de habitación -->
 <div class="modal fade" id="roomActionModal" tabindex="-1" aria-labelledby="roomActionModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="roomActionModalLabel">Acciones para Habitación <span id="modalRoomNumber"></span></h5>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content clean-modal">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold" id="roomActionModalLabel">
+          <i class="fas fa-door-open text-primary me-2"></i>
+          Acciones para Habitación <span id="modalRoomNumber"></span>
+        </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
-        <p><strong>ID Habitación:</strong> <span id="modalRoomId"></span></p>
-        <p><strong>Estado Actual:</strong> <span id="modalRoomStatus"></span></p>
-        <p><strong>Huésped:</strong> <span id="modalGuestInfo"></span></p>
-        <p><strong>Reserva Activa:</strong> <span id="modalBookingId"></span></p>
-        <hr>
-        <div id="modalActions">
+      <div class="modal-body pt-1">
+        <div class="mb-3">
+          <div class="fw-semibold small text-secondary">ID Habitación:</div>
+          <div class="mb-2" id="modalRoomId"></div>
+          <div class="fw-semibold small text-secondary">Estado Actual:</div>
+          <div class="mb-2" id="modalRoomStatus"></div>
+          <div class="fw-semibold small text-secondary">Huésped:</div>
+          <div class="mb-2" id="modalGuestInfo"></div>
+          <div class="fw-semibold small text-secondary">Reserva Activa:</div>
+          <div class="mb-2" id="modalBookingId"></div>
+        </div>
+        <hr class="my-3">
+        <div id="modalActions" class="row g-2 justify-content-center">
           <!-- Botones de acción se insertarán aquí con JS -->
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-outline-secondary w-100 rounded-pill" data-bs-dismiss="modal">Cerrar</button>
       </div>
     </div>
   </div>
@@ -228,7 +281,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const bookingId = this.dataset.bookingId;
             const guestId = this.dataset.guestId;
             const guestName = this.dataset.guestName;
-            const guestInfoHtml = this.querySelector('.card-text:last-of-type small') ? this.querySelector('.card-text:last-of-type small').innerHTML : 'N/A';
+            const guestInfoHtml = this.querySelector('.card-text:last-of-type small')
+                ? this.querySelector('.card-text:last-of-type small').innerHTML
+                : 'N/A';
 
             modalRoomNumber.textContent = roomNumber;
             modalRoomId.textContent = roomId;
@@ -239,31 +294,52 @@ document.addEventListener('DOMContentLoaded', function() {
             modalActions.innerHTML = '';
 
             const baseUrl = '<?php echo $base_url_for_assets; ?>';
+            const actions = [];
 
-            modalActions.innerHTML += `<a href="${baseUrl}rooms/edit/${roomId}" class="btn btn-info me-2"><i class="fas fa-edit"></i> Editar Habitación</a>`;
+            actions.push(
+              `<div class="col-12 col-sm-6">
+                <a href="${baseUrl}rooms/edit/${roomId}" class="btn btn-info w-100 mb-1">
+                  <i class="fas fa-edit"></i> Editar Habitación
+                </a>
+              </div>`
+            );
 
-            switch (roomStatus) {
-                case 'disponible':
-                    modalActions.innerHTML += `
-                        <a href="${baseUrl}bookings/create?room_id=${roomId}" class="btn btn-success me-2"><i class="fas fa-plus"></i> Asignar Reserva</a>
-                    `;
-                    break;
-                case 'ocupada':
-                    modalActions.innerHTML += `
-                        <a href="${baseUrl}bookings/checkout/${bookingId}" class="btn btn-danger me-2"><i class="fas fa-sign-out-alt"></i> Checkout</a>
-                        <a href="${baseUrl}bookings/edit/${bookingId}" class="btn btn-secondary me-2"><i class="fas fa-eye"></i> Ver Reserva</a>
-                    `;
-                    break;
+            if (roomStatus === 'disponible') {
+              actions.push(
+                `<div class="col-12 col-sm-6">
+                  <a href="${baseUrl}bookings/create?room_id=${roomId}" class="btn btn-success w-100 mb-1">
+                    <i class="fas fa-plus"></i> Asignar Reserva
+                  </a>
+                </div>`
+              );
+            } else if (roomStatus === 'ocupada') {
+              actions.push(
+                `<div class="col-12 col-sm-6">
+                  <a href="${baseUrl}bookings/checkout/${bookingId}" class="btn btn-danger w-100 mb-1">
+                    <i class="fas fa-sign-out-alt"></i> Checkout
+                  </a>
+                </div>
+                <div class="col-12 col-sm-6">
+                  <a href="${baseUrl}bookings/edit/${bookingId}" class="btn btn-secondary w-100 mb-1">
+                    <i class="fas fa-eye"></i> Ver Reserva
+                  </a>
+                </div>`
+              );
             }
 
             let saleUrl = `${baseUrl}cash_register/sell_product?room_id=${roomId}`;
             if (roomStatus === 'ocupada' && guestId) {
-                saleUrl += `&guest_id=${guestId}&guest_name=${encodeURIComponent(guestName)}`;
+              saleUrl += `&guest_id=${guestId}&guest_name=${encodeURIComponent(guestName)}`;
             }
-            modalActions.innerHTML += `
-                <a href="${saleUrl}" class="btn btn-primary"><i class="fas fa-shopping-cart"></i> Venta Directa</a>
-            `;
+            actions.push(
+              `<div class="col-12 col-sm-6">
+                <a href="${saleUrl}" class="btn btn-primary w-100 mb-1">
+                  <i class="fas fa-shopping-cart"></i> Venta Directa
+                </a>
+              </div>`
+            );
 
+            modalActions.innerHTML = actions.join('');
             roomActionModal.show();
         });
     });

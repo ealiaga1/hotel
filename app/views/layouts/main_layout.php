@@ -41,18 +41,18 @@ try {
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="<?php echo $base_url_for_assets; ?>css/custom.css">
-    <style>
+<style>
         body {
             display: flex;
             min-height: 100vh;
-            background-color: #f0f2f5;
+            background-color: #0a79e7;
             font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         }
         #sidebar-wrapper {
             min-width: 250px;
             max-width: 250px;
             background-color: linear-gradient(160deg, #23395d 0%, #1565c0 90%);
-            color: #f8f9fa;;
+            color: #0a79e7;;
             transition: all 0.3s;
             display: flex;
             flex-direction: column;
@@ -242,6 +242,9 @@ try {
             <a href="<?php echo $base_url_for_assets; ?>pool" class="list-group-item list-group-item-action <?php echo $is_pool_active ? 'active' : ''; ?>">
                 <i class="fas fa-fw fa-swimming-pool"></i> Piscina
             </a>
+            <a href="<?php echo $base_url_for_assets; ?>cash_register/sell_product" class="list-group-item list-group-item-action <?php echo (strpos($current_route, 'cash_register/sell_product') === 0) ? 'active' : ''; ?>">
+                        <i class="fas fa-fw fa-shopping-cart"></i> Venta Directa
+                    </a>
 
             <!-- Inventario con Submenú Desplegable -->
             <a class="list-group-item list-group-item-action dropdown-toggle-sidebar <?php echo $is_inventory_active ? 'active' : 'collapsed'; ?>" 
@@ -291,9 +294,6 @@ try {
                     </a>
                     <a href="<?php echo $base_url_for_assets; ?>cash_register/transactions" class="list-group-item list-group-item-action <?php echo (strpos($current_route, 'cash_register/transactions') === 0) ? 'active' : ''; ?>">
                         <i class="fas fa-fw fa-clipboard-list"></i> Ver Transacciones
-                    </a>
-                    <a href="<?php echo $base_url_for_assets; ?>cash_register/sell_product" class="list-group-item list-group-item-action <?php echo (strpos($current_route, 'cash_register/sell_product') === 0) ? 'active' : ''; ?>">
-                        <i class="fas fa-fw fa-shopping-cart"></i> Venta Directa
                     </a>
                     <!-- El enlace a Reporte POS se mueve dentro de Historial de Cierres -->
                 </div>
